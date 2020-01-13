@@ -1,1 +1,1 @@
-* [关于我自己](myself/)
+* [关于我自己](myself/intro.md)
