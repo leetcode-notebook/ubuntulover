@@ -29,3 +29,4 @@ public class Linkedlist {
 2. 插入链条当中。
 
 [LeetCode876 题解](linkedlist/Leetcode876MiddleOftheLinkedList.md)
+[LeetCode19 题解](linkedlist/leetcode19.md)
