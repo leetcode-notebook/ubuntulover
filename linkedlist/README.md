@@ -38,4 +38,10 @@ public class Linkedlist {
 
 如果想要删除单链表上的节点， 也非常简单，就是删除过程的逆过程。这里不再赘述。
 
-[LeetCode876 题解](linkedlist/Leetcode876MiddleOftheLinkedList.md)
+[LeetCode876 链表中间节点题解](linkedlist/Leetcode876MiddleOftheLinkedList.md)
+
+[Leetcode19 删除倒数n个节点题解](linkedlist/leetcode19.md)
+
+[Leetcode206 反转链表题解](linkedlist/leetcode206.md)
+
+[Leetcode61 旋转链表题解](linkedlist/leetcode61.md)
