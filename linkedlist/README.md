@@ -26,10 +26,16 @@ public class Linkedlist {
 我们首先来看如何往单链表里面添加元素。
 #### 添加
 1. 使用给定的值去初始化新的节点cur;
-2. 插入链条当中。
+
+![before](/home/xuetao/.config/Typora/typora-user-images/1578974211336.png)
+
+2. 将cur的next字段连接到原来的下一个节点next当中：![linking](/home/xuetao/.config/Typora/typora-user-images/1578974292368.png)
+3. 完成。![finish](/home/xuetao/.config/Typora/typora-user-images/1578974316048.png)
+
+插入操作是非常高效的，可以在O(1)的时间复杂度中把新节点插入进去，这是非常高效的。
+
+#### 删除
+
+如果想要删除单链表上的节点， 也非常简单，就是删除过程的逆过程。这里不再赘述。
 
 [LeetCode876 题解](linkedlist/Leetcode876MiddleOftheLinkedList.md)
-
-[LeetCode19 题解](linkedlist/leetcode19.md)
-
-[LeetCode 61题解](linkedlist/leetcode61.md)
