@@ -51,7 +51,7 @@ public class Linkedlist {
 Quack.h的内容：
 ```c
 #include<stdio.h>
-#include <stdlib.h>
+#include<stdlib.h>
 
 typedef struct _node* Quack;
 
@@ -76,7 +76,7 @@ Quack.c
 
 #define MARKERDATA INT_MAX // dummy data
 
-struct node {
+struct _node {
    int data;
    struct node *next;
 };
@@ -233,7 +233,6 @@ gcc Quack.c revarg.c
 >> 9876543210
 ```
 
-
 [LeetCode876 链表中间节点题解](linkedlist/Leetcode876MiddleOftheLinkedList.md)
 
 [Leetcode19 删除倒数n个节点题解](linkedlist/leetcode19.md)
@@ -241,3 +240,7 @@ gcc Quack.c revarg.c
 [Leetcode206 反转链表题解](linkedlist/leetcode206.md)
 
 [Leetcode61 旋转链表题解](linkedlist/leetcode61.md)
+
+[Leetcode160 相交链表题解](linkedlist/leetcode160.md)
+
+[Leetcode147 链表插入排序题解](linkedlist/leetcode147.md)
