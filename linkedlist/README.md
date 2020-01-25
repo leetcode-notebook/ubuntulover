@@ -244,3 +244,5 @@ gcc Quack.c revarg.c
 [Leetcode160 相交链表题解](linkedlist/leetcode160.md)
 
 [Leetcode147 链表插入排序题解](linkedlist/leetcode147.md)
+
+[Leetcode86 分割链表题解](linkedlist/leetcode86.md)
