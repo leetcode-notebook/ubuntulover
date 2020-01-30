@@ -246,3 +246,5 @@ gcc Quack.c revarg.c
 [Leetcode147 链表插入排序题解](linkedlist/leetcode147.md)
 
 [Leetcode86 分割链表题解](linkedlist/leetcode86.md)
+
+[Leetcode 203 移除链表元素题解](linkedlist/leetcode203.md)

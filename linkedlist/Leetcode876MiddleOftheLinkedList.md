@@ -70,5 +70,3 @@ public ListNode middleNode(ListNode head) {
 - 空间复杂度：_O(1)_
 
 
-
-冠状病毒
