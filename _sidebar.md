@@ -1,4 +1,6 @@
 * [简介](/)
 * [关于我自己](myself/intro.md)
-* [LinkedList](linkedlist/)
+* [链表 LinkedList](linkedlist/)
+* [二叉树 Binary Tree](binaryTree/)
+* [递归学习](recursive/)
 * [C Style Guide](myself/c_style_guide.md)

@@ -11,15 +11,26 @@
 <body>
   <div id="app">Welcome to wonder land</div>
   <script>
+   
+
+
     window.$docsify = {
       name: '属于我自己的诗和夏天',
       repo: 'https://github.com/ubuntulover/',
       autoHeader:true,
       loadSidebar:true,
+      loadNavbar:true,
       subMaxLevel:2, 
       coverpage:true,
+      copyCode: {
+        buttonText:'复制剪贴板',
+        errorText:'Error',
+        successText:'复制成功'
+      },
+      disqus:'shortname',
+      
 
-    }
+  }
   </script>
 <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
@@ -29,5 +40,15 @@
   <script src="//unpkg.com/prismjs/components/prism-java.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-go.min.js"></script>
    <script src="//unpkg.com/prismjs/components/prism-c.min.js"></script>
+   <script src="https://unpkg.com/docsify-copy-code@2"></script>
+   <!-- CDN files for docsify-katex -->
+<script src="//cdn.jsdelivr.net/npm/docsify-katex@latest/dist/docsify-katex.js"></script>
+<!-- or <script src="//cdn.jsdelivr.net/gh/upupming/docsify-katex@latest/dist/docsify-katex.js"></script> -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css"/>
+<!-- 支持mermaid -->
+ <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.css">
+ <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+ <!--评论-->
+ <script src="//unpkg.com/docsify/lib/plugins/disqus.min.js"></script>
 </body>
 </html>

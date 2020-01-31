@@ -83,7 +83,7 @@ struct _node {
 
 Quack createQuack(void) {
    Quack marker;
-   marker = malloc(sizeof(struct node));
+   marker = malloc(sizeof(struct _node));
    if (marker == NULL) {
       fprintf (stderr, "createQuack: no memory, aborting\n");
       exit(1);
@@ -99,7 +99,7 @@ void push(int data, Quack qs) {
       fprintf(stderr, "push: quack not initialised\n");
    }
    else {
-      newnode = malloc(sizeof(struct node));
+      newnode = malloc(sizeof(struct _node));
       if (newnode == NULL) {
          fprintf(stderr, "push: no memory, aborting\n");
          exit(1);
@@ -112,9 +112,23 @@ void push(int data, Quack qs) {
 }
 
 void qush(int data, Quack qs) {
-
-   // code not shown
-
+  Quack newnode;
+  if (qs == NULL) {
+    fprintf(stderr, "qush: quack not initialised\n");
+  }else {
+    newnode = malloc(sizeof(struct _node));
+    if (newnode == NULL) {
+      fprintf(stderr, "qush: no memory, aborting\n");
+      exit(1);
+    }
+    newnode->data = data;
+    Quack tmp = qs;
+    while (tmp->next != NULL) {
+      tmp = tmp->next;
+    }
+    newnode->next = tmp->next;
+    tmp->next = newnode;
+  }
    return;
 }
 
@@ -232,6 +246,7 @@ gcc Quack.c revarg.c
 ./a.out 0123456789
 >> 9876543210
 ```
+### 相关题解练习
 
 [LeetCode876 链表中间节点题解](linkedlist/Leetcode876MiddleOftheLinkedList.md)
 
