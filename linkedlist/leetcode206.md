@@ -59,4 +59,7 @@ public ListNode reverseList(ListNode head) {
     return p;
 }
 ```
+####　复杂度分析
+ - 时间复杂度：__O(n)__, n是列表长度。
+ - 空间复杂度：__O(ｎ)__，函数的栈帧。
 走到这里，相信对递归有了更深刻的理解。

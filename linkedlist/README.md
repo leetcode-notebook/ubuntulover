@@ -39,6 +39,8 @@ public class Linkedlist {
 如果想要删除单链表上的节点， 也非常简单，就是删除过程的逆过程。这里不再赘述。
 
 ###　拓展
+
+
 网上链表相关的代码有比较多，这里可以考虑使用链表来实现队列/栈。
 队列：一种先进先出的结构
 栈：　一种先进后出的结构
@@ -212,7 +214,7 @@ void showQuack(Quack qs) {
 }
 ```
 
-那么我们来编写程序来使用，我们来反转字符串。
+那么我们来编写程序来使用，我们来反转字符串。反转字符串这里使用了栈.
 revarg.c
 
 ```c
@@ -263,3 +265,5 @@ gcc Quack.c revarg.c
 [Leetcode86 分割链表题解](linkedlist/leetcode86.md)
 
 [Leetcode 203 移除链表元素题解](linkedlist/leetcode203.md)
+
+[Leetcode 2 两数相加](linkedlist/leetcode2.md)
