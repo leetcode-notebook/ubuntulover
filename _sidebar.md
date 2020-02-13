@@ -2,6 +2,6 @@
 * [关于我自己](myself/intro.md)
 * [链表 LinkedList](linkedlist/)
 * [二叉树 Binary Tree](binaryTree/)
-* [栈和队列](stack_queue)
+* [栈和队列](stack_queue/)
 * [递归学习](recursive/)
 * [C Style Guide](myself/c_style_guide.md)
