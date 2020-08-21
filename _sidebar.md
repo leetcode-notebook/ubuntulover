@@ -5,3 +5,5 @@
 * [栈和队列](stack_queue/)
 * [递归学习](recursive/)
 * [C Style Guide](myself/c_style_guide.md)
+* [BFS](BFS/)
+* [DP](DP/)
