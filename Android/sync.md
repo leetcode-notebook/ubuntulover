@@ -1,4 +1,4 @@
-###　安卓当中的同步机制
+### 安卓当中的同步机制
 
 我们先回忆一下，操作系统中有哪些同步的手段？
 
@@ -26,7 +26,7 @@
 
 为了简单，我就摘取一些相关的代码，其他代码有兴趣的可以自行深入分析。
 
-```c++
+```cpp
 class CAPABILITY("mutex") Mutex {
   public:
     enum {
@@ -78,11 +78,11 @@ inline status_t Mutex::tryLock() {
 
 这个东西字面意思是条件。他的设计哲学是，判断一个条件是不是满足了？—— 如果满足了，那就返回，继续执行下去，否则就休眠等待。**直到条件被满足**。
 
-退一步想想，这种情况能用Mutex做么？ 理论上应该可以的。举个例子，假设我们两个线程`A` ，` B`， 他们会同时修改一个全局变量`var`, 并且我们定义行为：
+退一步想想，这种情况能用Mutex做么？ 理论上应该可以的。举个例子，假设我们两个线程`A` 、` B`， 他们会同时修改一个全局变量`var`, 并且我们定义行为：
 
-`Thread A` 不断修改 `var`的值，每次改变之后的值是未知的
+- `Thread A` 不断修改 `var`的值，每次改变之后的值是未知的
 
-`Thread B`观察`var`的值，如果为0了的时候执行某些动作。
+- `Thread B`观察`var`的值，当`var = 0`的时候执行某些动作。
 
 我们可以看到， A ， B 两个线程都想访问`var`这个资源。Mutex是个思路。但是我们想想，线程B 等待的是当 `var`这个变量为0的情况，醉翁之意不在酒。
 
@@ -94,7 +94,7 @@ while (1) { // 死循环
     if (var == 0) { // 条件满足
         release_mutex_lock(var);
         break;
-    }else {
+    } else {
         release_mutex_lock(var); // 下一轮我们再看看
         sleep();
     }
@@ -145,8 +145,6 @@ public:
     // Signal the condition variable, allowing all threads to continue.
     void broadcast(); // 条件满足时 通知所有等待者
 ```
-
-其实如果你英文好的话，看上面的注释你就可以明白了。
 
 这里是个C++的类，那么我们来看看这里的一些关键实现方法。
 
@@ -206,7 +204,7 @@ inline void Condition::broadcast() {
 
 意思是屏障。接上文我们继续思考，我们来看一个Condition的例子。
 
-Barrier这个东西是为了SurfaceFlinger这个东西设计的，不像Mutex，Condition一样作为Util工具来提供给大家用。不过我们来看看Barrier这个例子。
+Barrier这个东西是为了SurfaceFlinger这个东西设计的，不像Mutex、Condition一样作为Util工具来提供给大家用。不过我们来看看Barrier这个例子。
 
 文件位置：`frameworks/native/services/surfaceflinger/Barrier.h`
 
@@ -244,7 +242,7 @@ private:
 
 ```
 
-可以看到，有三个函数，分别是`wait`, `close`,`open`。
+可以看到，有三个函数，分别是`wait()`, `close()`,`open()`。
 
 既然说它是condition的一个例子，那么barrier等待的条件是什么呢？
 
