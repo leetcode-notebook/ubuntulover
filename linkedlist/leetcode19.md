@@ -40,3 +40,13 @@ public ListNode removeNthFromEnd(ListNode head, int n) {
     }
 ```
 
+```java
+
+void addLeaf(TreeNode root, int k) {
+  if (root == null) return;
+  if (root.left == null && root.right == null) root.val += k;
+  addLeaf(root.left, k);
+  addLeaf(root.right, k);
+}
+```
+
