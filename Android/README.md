@@ -7,3 +7,5 @@
 [Android一些同步机制的分析](Android/sync.md)
 
 [Android中Looper，Handler，MessageQueue的分析](Android/LooperHandler.md)
+
+[Android的UI主线程---ActivityThread分析](Android/ActivityThread.md)

@@ -366,7 +366,46 @@ class MyLooperThread extends Thread {
 
 可以看到，我们没有发现有Looper对象的创建，最后也是一句Looper.loop，整个消息循环系统就跑起来了。
 
+这是为什么呢？
+
+很简单，我们来看看`prepare()`方法中干了些什么就知道了。
+
+```java
+public static void prepare() {
+        prepare(true);
+}
+
+private static void prepare(boolean quitAllowed) {
+    if (sThreadLocal.get() != null) {
+        throw new RuntimeException("Only one Looper may be created per thread");
+    }
+    sThreadLocal.set(new Looper(quitAllowed));
+}
+
+```
 
 
 
+可以看到，它调用了另外一个prepare方法，在这里面，创建了一个新的Looper对象，封进ThreadLocal里面，看到了这里，你就明白，每个线程只有一个Looper对象是怎么实现的了把。然后，我们再回过头来看`Handler`的构造函数,就拿我们例子里面的空函数为例子：
+
+```java
+ public Handler(@Nullable Callback callback, boolean async) {
+      ... //省略一些无关代码
+        mLooper = Looper.myLooper(); // 这里本质上调用了ThreadLocal.get()方法返回当前线程的Looper对象。
+        if (mLooper == null) {
+            throw new RuntimeException(
+                "Can't create handler inside thread " + Thread.currentThread()
+                        + " that has not called Looper.prepare()"); // 这里的异常报错也提示我们，要先调用一次Looper.prepare()方法。
+        }
+        mQueue = mLooper.mQueue; // 设置MessageQueue
+        mCallback = callback;
+        mAsynchronous = async;
+    }
+```
+
+到这里，整个的联系就盘活了。当前这个`Handler`执行发送消息的时候，就会把消息投送到这个`Looper`的`mQueue`里面。然后`Looper`里面的`loop()`方法被调用，就会不断的取出消息，接着调用`Handler`来进行处理。
+
+---
+
+从源码角度分析这几个东西的关系，逻辑就清晰很多，也感叹于谷歌工程师的天才设计！
 
