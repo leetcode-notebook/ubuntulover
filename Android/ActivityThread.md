@@ -66,6 +66,7 @@ public static void main(String[] args) {
         thread.attach(false, startSeq);
 
         if (sMainThreadHandler == null) {
+            // 获取 Handler 
             sMainThreadHandler = thread.getHandler();
         }
 
@@ -84,4 +85,47 @@ public static void main(String[] args) {
     }
 ```
 
-比较一下这个代码和我们前文[Android Looper的分析](Android/LooperHandler.md)里面的LooperThread例子就可以知道，架构是一样的
+比较一下这个代码和我们前文[Android Looper的分析](Android/LooperHandler.md)里面的MyLooperThread例子就可以知道，架构是一样的。但是这里有点小小的区别：
+
+:arrow_right:`prepareMainLooper()`和`prepare()`
+
+:arrow_right:`Handler`不同
+
+来看第一个问题：
+
+`prepareMainLooper()`和普通的`prepare()`有什么区别？
+
+不多说，直接看代码：
+
+```java
+// Looper.java
+ public static void prepareMainLooper() {
+        prepare(false); // 还是调用了普通版本的prepare方法， 参数false表示不允许线程退出
+        synchronized (Looper.class) {
+            if (sMainLooper != null) {
+                throw new IllegalStateException("The main Looper has already been prepared.");
+            }
+            sMainLooper = myLooper(); // 区分开普通线程的Looper和主线程的Looper
+        }
+ }
+```
+
+到此应该就很明显了。本质上没啥区别，只是Google玩了一下，巧妙的区分开普通线程和主线程的Looper而已。
+
+那我们来看第二个问题：
+
+`sMainThreadHandler`当ActivityThread创建的时候，可以发现，它还创建了一个这个东西：
+
+```java
+final H mH = new H();
+```
+
+那么这 H 是个啥？
+
+```java
+class H extends Handler{
+    ...
+}
+```
+
+真相大白！那么在这个里面，我们所谓的UI线程的Handler，就是他了。它的`handleMessage`方法比较复杂，有机会我们再行分析。
