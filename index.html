@@ -34,7 +34,7 @@
         function(hook, vm) {
           // 底部
           hook.beforeEach(function(content) {
-            var url ='https://github.com/ubuntulover/leetcode-notebook/tree/master/docs/' + vm.route.file;
+            var url ='https://github.com/ubuntulover/leetcode-notebook/' + vm.route.file;
             var editHtml = '> 🧐发现错误，想一起完善？[在 Github 编辑此页](' + url +')！\n'
 
             var footer = [
@@ -72,6 +72,6 @@
  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.css">
  <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
  <!--评论-->
- <script src="//unpkg.com/docsify/lib/plugins/disqus.min.js"></script>
+ <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/disqus.min.js"></script>
 </body>
 </html>
