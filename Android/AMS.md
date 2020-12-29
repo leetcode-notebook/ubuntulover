@@ -157,6 +157,7 @@ public void startService(@NonNull final SystemService service) {
    void startActivityLocked(ActivityRecord r, ActivityRecord focusedTopActivity,
                boolean newTask, boolean keepCurTransition, ActivityOptions options) {
            if (r != null && focusedTopActivity != null) {
+               // 这里不判空你可以试试看能不能启动你的虚拟机（手动滑稽）
    
                String msg = "we enter startActivityLocked() method!\nActivityRecord = " + r.toString() + ": ActivityRecord(focusedTopActivity) = " + focusedTopActivity
                        .toString();
