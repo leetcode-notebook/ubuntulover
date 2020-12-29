@@ -121,9 +121,9 @@ int main(int argc, char* const argv[])
 
 ```
 
-那么这个runtime是什么？
+那么这个`runtime`是什么？
 
-它实质上是个AndroidRuntime对象。
+它实质上是个`AndroidRuntime`对象。
 
 它的start源码如下：
 
@@ -140,7 +140,7 @@ int main(int argc, char* const argv[])
  */
 void AndroidRuntime::start(const char* className, const Vector<String8>& options, bool zygote)
 {
-  ... // 省略不必要的代码
+  	... // 省略不必要的代码
     /* start the virtual machine */
     JniInvocation jni_invocation;
     jni_invocation.Init(NULL);
@@ -355,4 +355,310 @@ android.accounts.AccountsException
 我们来考虑这么一个问题，Zygote前期负责启动系统服务，后面还要启动程序（孵化程序），但是，这个玩意只会在`init.rc`里面启动一次，它是怎么完成这两个工作呢？我们推测，`forkSystemServer()`会启动一个专门的进程来承载服务的运行，然后`app_process`的进程就负责孵化（当所有应用程序的爹）。是这样么？
 
 还是得去看看代码：
+
+```java
+    /**
+     * Prepare the arguments and forks for the system server process.
+     *
+     * @return A {@code Runnable} that provides an entrypoint into system_server code in the child
+     * process; {@code null} in the parent.
+     */
+    private static Runnable forkSystemServer(String abiList, String socketName,
+            ZygoteServer zygoteServer) {
+        long capabilities = posixCapabilitiesAsBits(
+                OsConstants.CAP_IPC_LOCK,
+                OsConstants.CAP_KILL,
+                OsConstants.CAP_NET_ADMIN,
+                OsConstants.CAP_NET_BIND_SERVICE,
+                OsConstants.CAP_NET_BROADCAST,
+                OsConstants.CAP_NET_RAW,
+                OsConstants.CAP_SYS_MODULE,
+                OsConstants.CAP_SYS_NICE,
+                OsConstants.CAP_SYS_PTRACE,
+                OsConstants.CAP_SYS_TIME,
+                OsConstants.CAP_SYS_TTY_CONFIG,
+                OsConstants.CAP_WAKE_ALARM,
+                OsConstants.CAP_BLOCK_SUSPEND
+        );
+        /* Containers run without some capabilities, so drop any caps that are not available. */
+        StructCapUserHeader header = new StructCapUserHeader(
+                OsConstants._LINUX_CAPABILITY_VERSION_3, 0);
+        StructCapUserData[] data;
+        try {
+            data = Os.capget(header);
+        } catch (ErrnoException ex) {
+            throw new RuntimeException("Failed to capget()", ex);
+        }
+        capabilities &= ((long) data[0].effective) | (((long) data[1].effective) << 32);
+
+        /* Hardcoded command line to start the system server */
+        String args[] = {
+                "--setuid=1000",
+                "--setgid=1000",
+                "--setgroups=1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1018,1021,1023,"
+                        + "1024,1032,1065,3001,3002,3003,3006,3007,3009,3010",
+                "--capabilities=" + capabilities + "," + capabilities,
+                "--nice-name=system_server",
+                "--runtime-args",
+                "--target-sdk-version=" + VMRuntime.SDK_VERSION_CUR_DEVELOPMENT,
+                "com.android.server.SystemServer",
+        };
+        ZygoteArguments parsedArgs = null;
+
+        int pid;
+
+        try {
+            parsedArgs = new ZygoteArguments(args);
+            Zygote.applyDebuggerSystemProperty(parsedArgs);
+            Zygote.applyInvokeWithSystemProperty(parsedArgs);
+
+            boolean profileSystemServer = SystemProperties.getBoolean(
+                    "dalvik.vm.profilesystemserver", false);
+            if (profileSystemServer) {
+                parsedArgs.mRuntimeFlags |= Zygote.PROFILE_SYSTEM_SERVER;
+            }
+
+            /* Request to fork the system server process */
+            /* 出现了！ 就是这！ */
+            pid = Zygote.forkSystemServer(
+                    parsedArgs.mUid, parsedArgs.mGid,
+                    parsedArgs.mGids,
+                    parsedArgs.mRuntimeFlags,
+                    null,
+                    parsedArgs.mPermittedCapabilities,
+                    parsedArgs.mEffectiveCapabilities);
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        /* For child process */
+        /* 回想一下，unix的 fork函数的用法 */
+        if (pid == 0) {
+            if (hasSecondZygote(abiList)) {
+                waitForSecondaryZygote(socketName);
+            }
+
+            zygoteServer.closeServerSocket();
+            return handleSystemServerProcess(parsedArgs);
+        }
+
+        return null;
+    }
+```
+
+可以看到，去fork了一个新的进程来承载系统服务，然后在新生的分支上（pid = 0）来处理系统服务进程（`handleSystemServerProcess`）。值得注意的是，在fork出一个子进程之后，直接就返回进`ZygoteInit`里面了。接下来的一句代码是：
+
+```java
+caller = zygoteServer.runSelectLoop(abiList);
+```
+
+推测应该是个死循环－除非出现异常或者Zygote进程退出了。来看代码：
+
+代码位置：`$ANDROID_CODE_BASE/frameworks/base/core/java/com/android/internal/os/ZygoteInit.java`
+
+```JAVA
+ /**
+     * Runs the zygote process's select loop. Accepts new connections as
+     * they happen, and reads commands from connections one spawn-request's
+     * worth at a time.
+     */
+    Runnable runSelectLoop(String abiList) {
+        ArrayList<FileDescriptor> socketFDs = new ArrayList<FileDescriptor>();
+        ArrayList<ZygoteConnection> peers = new ArrayList<ZygoteConnection>();
+
+        socketFDs.add(mZygoteSocket.getFileDescriptor());
+        peers.add(null);
+
+        while (true) { // 如我们所猜测的一样，确实是个死循环。
+            fetchUsapPoolPolicyPropsWithMinInterval();
+
+            int[] usapPipeFDs = null;
+            StructPollfd[] pollFDs = null;
+
+            // Allocate enough space for the poll structs, taking into account
+            // the state of the USAP pool for this Zygote (could be a
+            // regular Zygote, a WebView Zygote, or an AppZygote).
+            if (mUsapPoolEnabled) {
+                usapPipeFDs = Zygote.getUsapPipeFDs();
+                pollFDs = new StructPollfd[socketFDs.size() + 1 + usapPipeFDs.length];
+            } else {
+                pollFDs = new StructPollfd[socketFDs.size()];
+            }
+
+            /*
+             * For reasons of correctness the USAP pool pipe and event FDs
+             * must be processed before the session and server sockets.  This
+             * is to ensure that the USAP pool accounting information is
+             * accurate when handling other requests like API blacklist
+             * exemptions.
+             */
+
+            int pollIndex = 0;
+            for (FileDescriptor socketFD : socketFDs) {
+                pollFDs[pollIndex] = new StructPollfd();
+                pollFDs[pollIndex].fd = socketFD;
+                pollFDs[pollIndex].events = (short) POLLIN;
+                ++pollIndex;
+            }
+
+            final int usapPoolEventFDIndex = pollIndex;
+
+            if (mUsapPoolEnabled) {
+                pollFDs[pollIndex] = new StructPollfd();
+                pollFDs[pollIndex].fd = mUsapPoolEventFD;
+                pollFDs[pollIndex].events = (short) POLLIN;
+                ++pollIndex;
+
+                for (int usapPipeFD : usapPipeFDs) {
+                    FileDescriptor managedFd = new FileDescriptor();
+                    managedFd.setInt$(usapPipeFD);
+
+                    pollFDs[pollIndex] = new StructPollfd();
+                    pollFDs[pollIndex].fd = managedFd;
+                    pollFDs[pollIndex].events = (short) POLLIN;
+                    ++pollIndex;
+                }
+            }
+
+            try {
+                Os.poll(pollFDs, -1);
+            } catch (ErrnoException ex) {
+                throw new RuntimeException("poll failed", ex);
+            }
+
+            boolean usapPoolFDRead = false;
+
+            while (--pollIndex >= 0) {
+                if ((pollFDs[pollIndex].revents & POLLIN) == 0) {
+                    continue;
+                }
+
+                if (pollIndex == 0) {
+                    // Zygote server socket
+					// 有新的连接请求
+                    ZygoteConnection newPeer = acceptCommandPeer(abiList);
+                    peers.add(newPeer);
+                    socketFDs.add(newPeer.getFileDescriptor());
+
+                } else if (pollIndex < usapPoolEventFDIndex) {
+                    // Session socket accepted from the Zygote server socket
+
+                    try {
+                        ZygoteConnection connection = peers.get(pollIndex);
+                        final Runnable command = connection.processOneCommand(this); // 已经建立的连接中，有命令过来要做
+						// 下面的代码参考注释，大致是一些扫尾工作。
+                        // TODO (chriswailes): Is this extra check necessary?
+                        if (mIsForkChild) {
+                            // We're in the child. We should always have a command to run at this
+                            // stage if processOneCommand hasn't called "exec".
+                            if (command == null) {
+                                throw new IllegalStateException("command == null");
+                            }
+
+                            return command;
+                        } else {
+                            // We're in the server - we should never have any commands to run.
+                            if (command != null) {
+                                throw new IllegalStateException("command != null");
+                            }
+
+                            // We don't know whether the remote side of the socket was closed or
+                            // not until we attempt to read from it from processOneCommand. This
+                            // shows up as a regular POLLIN event in our regular processing loop.
+                            if (connection.isClosedByPeer()) {
+                                connection.closeSocket();
+                                peers.remove(pollIndex);
+                                socketFDs.remove(pollIndex);
+                            }
+                        }
+                    } catch (Exception e) {
+                        if (!mIsForkChild) {
+                            // We're in the server so any exception here is one that has taken place
+                            // pre-fork while processing commands or reading / writing from the
+                            // control socket. Make a loud noise about any such exceptions so that
+                            // we know exactly what failed and why.
+
+                            Slog.e(TAG, "Exception executing zygote command: ", e);
+
+                            // Make sure the socket is closed so that the other end knows
+                            // immediately that something has gone wrong and doesn't time out
+                            // waiting for a response.
+                            ZygoteConnection conn = peers.remove(pollIndex);
+                            conn.closeSocket();
+
+                            socketFDs.remove(pollIndex);
+                        } else {
+                            // We're in the child so any exception caught here has happened post
+                            // fork and before we execute ActivityThread.main (or any other main()
+                            // method). Log the details of the exception and bring down the process.
+                            Log.e(TAG, "Caught post-fork exception in child process.", e);
+                            throw e;
+                        }
+                    } finally {
+                        // Reset the child flag, in the event that the child process is a child-
+                        // zygote. The flag will not be consulted this loop pass after the Runnable
+                        // is returned.
+                        mIsForkChild = false;
+                    }
+                } else {
+                    // Either the USAP pool event FD or a USAP reporting pipe.
+
+                    // If this is the event FD the payload will be the number of USAPs removed.
+                    // If this is a reporting pipe FD the payload will be the PID of the USAP
+                    // that was just specialized.
+                    long messagePayload = -1;
+
+                    try {
+                        byte[] buffer = new byte[Zygote.USAP_MANAGEMENT_MESSAGE_BYTES];
+                        int readBytes = Os.read(pollFDs[pollIndex].fd, buffer, 0, buffer.length);
+
+                        if (readBytes == Zygote.USAP_MANAGEMENT_MESSAGE_BYTES) {
+                            DataInputStream inputStream =
+                                    new DataInputStream(new ByteArrayInputStream(buffer));
+
+                            messagePayload = inputStream.readLong();
+                        } else {
+                            Log.e(TAG, "Incomplete read from USAP management FD of size "
+                                    + readBytes);
+                            continue;
+                        }
+                    } catch (Exception ex) {
+                        if (pollIndex == usapPoolEventFDIndex) {
+                            Log.e(TAG, "Failed to read from USAP pool event FD: "
+                                    + ex.getMessage());
+                        } else {
+                            Log.e(TAG, "Failed to read from USAP reporting pipe: "
+                                    + ex.getMessage());
+                        }
+
+                        continue;
+                    }
+
+                    if (pollIndex > usapPoolEventFDIndex) {
+                        Zygote.removeUsapTableEntry((int) messagePayload);
+                    }
+
+                    usapPoolFDRead = true;
+                }
+            }
+
+            // Check to see if the USAP pool needs to be refilled.
+            if (usapPoolFDRead) {
+                int[] sessionSocketRawFDs =
+                        socketFDs.subList(1, socketFDs.size())
+                                .stream()
+                                .mapToInt(fd -> fd.getInt$())
+                                .toArray();
+
+                final Runnable command = fillUsapPool(sessionSocketRawFDs);
+
+                if (command != null) {
+                    return command;
+                }
+            }
+        }
+    }
+```
+
+从代码中可以看到， 的确是个死循环，由它来守护Zygote。因为Zygote毕竟还是一个Java程序，所以还需要考量一个GC的问题。如果GC太过于频繁，每次回收的垃圾又不算多，则得不偿失。基本上我们来看看这个循环一轮做了什么事情呢？
 

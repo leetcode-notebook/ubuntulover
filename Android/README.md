@@ -13,3 +13,8 @@
 [Android系统启动过程分析](Android/Launcher.md)
 
 [Android的天字一号进程Zygote](Android/Zygote.md)
+
+[Android Activity启动模式](Android/ActivityLaunch.md)
+
+[Android管理Activity的服务---AMS（ActivityManagerService）](Android/AMS.md)
+
