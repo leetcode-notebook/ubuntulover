@@ -3,10 +3,10 @@
 
 > 愿追逐技术的路上的人都可以梦想成真！
 
-我叫Alex，是一名普普通通的IT小男生，本科学习的是机械工程，但是个人还是非常喜欢IT，因此在研究生的时光选择了学习IT。目前是新南威尔士大学的一名IT研究生。
+我叫Alex，是一名普普通通的IT小男生，本科学习的是机械工程，但是个人还是非常喜欢IT，因此在研究生的时光选择了学习IT。从新南威尔士大学毕业后在字节跳动工作。 目前是字节跳动的一个跨端工程师，主要负责对内基建。感兴趣的可以联系我并且投递简历。
 
 ## 联系我
-Email: xuetao2015test@gmail.com
+Email: xuetao.alex@bytedance.com
 
 Gayhub请右上角（手动滑稽）
 
@@ -24,7 +24,7 @@ Gayhub请右上角（手动滑稽）
 
   打算去一次LIVE。
 
-- 语言：ablity(C)  ==  ablity(Java) > ablity(Python) > ablity(C++)
+- 语言：ability(C)  ==  ability(Java) == ability(kotlin) > ability(Python) > ability(C++)
 
 - 辛弃疾的小迷弟and仓央嘉措情诗的拥趸。
 
